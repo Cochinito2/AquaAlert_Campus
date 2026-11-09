@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaAlert Campus - ITL Campus I</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        itl: {
+                            blue: '#0F2C59',
+                            gold: '#D89216',
+                            accent: '#00D26A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .campus-grid {
+            background-color: #0d1527;
+            background-image:
+                radial-gradient(rgba(0, 210, 106, 0.08) 1px, transparent 0),
+                radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .pulse-red {
+            animation: pulse-red-anim 2s infinite;
+        }
+
+        @keyframes pulse-red-anim {
+            0% {
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Branding -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('map')">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-950/50">
+                        <i class="fa-solid font-bold fa-droplet text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span
+                                class="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-emerald-400">AquaAlert</span>
+                            <span
+                                class="text-xs bg-emerald-500/20 text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/30">PWA</span>
+                        </div>
+                        <p class="text-xs text-slate-400">ITL Campus I • Sistema de Monitoreo</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (Desktop) -->
+                <nav class="hidden md:flex space-x-1 bg-slate-950/60 p-1.5 rounded-xl border border-slate-800">
+                    <button onclick="switchTab('map')" id="nav-tab-map"
+                        class="nav-tab active-tab px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 text-white bg-slate-800 shadow">
+                        <i class="fa-solid fa-map-location-dot text-emerald-400"></i>
+                        <span>Mapa Interactivo</span>
+                    </button>
+                    <button onclick="switchTab('report')" id="nav-tab-report"
+                        class="nav-tab px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i class="fa-solid fa-qrcode text-cyan-400"></i>
+                        <span>Escanear QR (Estudiante)</span>
+                    </button>
+                    <button onclick="switchTab('admin')" id="nav-tab-admin"
+                        class="nav-tab px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 text-slate-400 hover:text-white hover:bg-slate-800/50">
+                        <i class="fa-solid fa-screwdriver-wrench text-amber-400"></i>
+                        <span>Dashboard Mantenimiento</span>
+                        <span id="badge-pending-count"
+                            class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                </nav>
+
+                <!-- Auth Action & Campus Badge -->
+                <div class="flex items-center space-x-3">
+                    <div id="header-auth-container">
+                        <!-- Renderizado dinámico vía JS -->
+                    </div>
+                    <div class="hidden lg:flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-slate-300 font-medium">TecNM - Instituto Tecnológico de León</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation bar bottom -->
+        <div class="md:hidden flex border-t border-slate-800 bg-slate-900/95 px-2 py-1 justify-around">
+            <button onclick="switchTab('map')" id="mob-tab-map"
+                class="flex flex-col items-center py-1.5 px-3 text-emerald-400 text-xs font-medium">
+                <i class="fa-solid fa-map-location-dot text-base mb-1"></i>
+                <span>Mapa</span>
+            </button>
+            <button onclick="switchTab('report')" id="mob-tab-report"
+                class="flex flex-col items-center py-1.5 px-3 text-slate-400 text-xs font-medium">
+                <i class="fa-solid fa-qrcode text-base mb-1"></i>
+                <span>Reportar QR</span>
+            </button>
+            <button onclick="switchTab('admin')" id="mob-tab-admin"
+                class="flex flex-col items-center py-1.5 px-3 text-slate-400 text-xs font-medium relative">
+                <i class="fa-solid fa-screwdriver-wrench text-base mb-1"></i>
+                <span>Mantenimiento</span>
+                <span id="mob-badge-pending-count"
+                    class="absolute top-1 right-2 w-2 h-2 rounded-full bg-rose-500 hidden"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col">
+
+        <!-- VISTA 1: MAPA INTERACTIVO -->
+        <section id="view-map" class="tab-view flex-1 flex flex-col space-y-4">
+            <!-- Filter Bar & Legend -->
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Filtrar Estado:</span>
+                    <button onclick="setFilterStatus('ALL')" id="filter-btn-ALL"
+                        class="filter-btn active bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-semibold px-3 py-1.5 rounded-lg transition">Todos</button>
+                    <button onclick="setFilterStatus('Operativo')" id="filter-btn-Operativo"
+                        class="filter-btn bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 🟢 Operativos
+                    </button>
+                    <button onclick="setFilterStatus('Parcial')" id="filter-btn-Parcial"
+                        class="filter-btn bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> 🟡 Parciales
+                    </button>
+                    <button onclick="setFilterStatus('Fuera de Servicio')" id="filter-btn-Fuera de Servicio"
+                        class="filter-btn bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> 🔴 Fuera de Servicio
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-4 border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Género:</span>
+                    <select id="filter-gender" onchange="renderMap()"
+                        class="bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">🚹 🚺 Todos los Sanitarios</option>
+                        <option value="Hombres">🚹 Solo Hombres</option>
+                        <option value="Mujeres">🚺 Solo Mujeres</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Campus Map Canvas Container -->
+            <div
+                class="relative flex-1 min-h-[500px] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden campus-grid flex flex-col shadow-2xl">
+                <!-- Map Header Overlay -->
+                <div
+                    class="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur border border-slate-800 p-3 rounded-xl shadow-lg max-w-xs">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-map text-emerald-400"></i> Plano ITL Campus I
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Haz clic sobre cualquier módulo para ver estado detallado o
+                        emitir reporte.</p>
+                </div>
+
+                <!-- Legend Bottom Right -->
+                <div
+                    class="absolute bottom-4 right-4 z-20 bg-slate-900/90 backdrop-blur border border-slate-800 p-3 rounded-xl shadow-lg text-xs space-y-1.5">
+                    <div class="font-semibold text-slate-300 mb-1 border-b border-slate-800 pb-1">Simbología</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> 🟢
+                        Operativo (Agua OK)</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400"></span> 🟡
+                        Parcial (Falla menor/Lavamanos)</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500"></span> 🔴 Fuera
+                        de Servicio (Sin agua/Fuga)</div>
+                </div>
+
+                <!-- Interactive SVG Canvas for Map -->
+                <div
+                    class="relative w-full h-full min-h-[550px] overflow-auto custom-scrollbar p-6 flex items-center justify-center">
+                    <div id="map-container"
+                        class="relative w-[1100px] h-[700px] bg-slate-950/40 rounded-3xl border border-slate-800/80 shadow-inner overflow-hidden">
+
+                        <!-- Campus Landmarks background layout graphics -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-30"
+                            viewBox="0 0 1100 700">
+                            <!-- Sports Field -->
+                            <rect x="750" y="80" width="180" height="300" rx="40" fill="none" stroke="#10b981"
+                                stroke-width="2" stroke-dasharray="6 4" />
+                            <circle cx="840" cy="230" r="40" fill="none" stroke="#10b981" stroke-width="2" />
+                            <text x="840" y="235" font-size="12" fill="#10b981" text-anchor="middle">Pista & Cancha
+                                Empastada (6)</text>
+
+                            <!-- Baseball Field -->
+                            <path d="M 750,480 L 920,480 A 170 170 0 0 1 750,650 Z" fill="none" stroke="#d89216"
+                                stroke-width="2" />
+                            <text x="810" y="550" font-size="12" fill="#d89216" text-anchor="middle">Campo de Béisbol
+                                (5)</text>
+
+                            <!-- Plaza Cívica & Parking -->
+                            <rect x="520" y="480" width="120" height="150" fill="none" stroke="#475569" stroke-width="2"
+                                stroke-dasharray="4" />
+                            <text x="580" y="555" font-size="11" fill="#94a3b8" text-anchor="middle">Estacionamiento
+                                (2)</text>
+
+                            <!-- Campus Paths -->
+                            <path d="M 120,350 H 680 M 350,150 V 620 M 520,250 V 650 M 200,450 H 520" stroke="#334155"
+                                stroke-width="8" stroke-linecap="round" />
+                        </svg>
+
+                        <!-- Dynamic Buildings & Restroom Nodes rendered by JS -->
+                        <div id="map-nodes-layer" class="absolute inset-0"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 2: ESCANEAR QR / REPORTAR (ESTUDIANTE) -->
+        <section id="view-report" class="tab-view flex-1 hidden">
+            <div class="max-w-2xl mx-auto w-full space-y-6">
+                <!-- Header Banner -->
+                <div
+                    class="bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950 border border-slate-800 p-6 rounded-2xl shadow-xl flex items-center space-x-4">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl shrink-0">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Reporte de Estado de Sanitarios</h2>
+                        <p class="text-xs text-slate-400 mt-1">Escanea el código QR ubicado en la puerta del baño o
+                            seleccione un módulo del campus para avisar de incidencias sin necesidad de registro.</p>
+                    </div>
+                </div>
+
+                <!-- QR Module Selector & Simulator -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                            1. Selecciona o simula el escaneo del Código QR:
+                        </label>
+                        <div class="flex gap-2">
+                            <select id="select-qr-module" onchange="onSelectQRModule(this.value)"
+                                class="flex-1 bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500 transition">
+                                <option value="">-- Seleccionar Módulo del Campus --</option>
+                            </select>
+                            <button onclick="simulateCameraScan()"
+                                class="bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-3 rounded-xl text-sm transition flex items-center gap-2 shrink-0 shadow-lg shadow-cyan-950">
+                                <i class="fa-solid fa-camera"></i>
+                                <span class="hidden sm:inline">Simular Cámara</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seleccionar la tarjeta de Info-->
+                    <div id="selected-module-card"
+                        class="hidden bg-slate-950 border border-slate-800 rounded-xl p-4 transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div id="card-gender-icon"
+                                    class="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold">
+                                </div>
+                                <div>
+                                    <h4 id="card-building-name" class="font-bold text-sm text-white">---</h4>
+                                    <p id="card-qr-code" class="text-xs text-slate-400 font-mono">---</p>
+                                </div>
+                            </div>
+                            <div id="card-status-badge" class="px-3 py-1 rounded-full text-xs font-bold border">
+                                ---
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de opciones de reporte -->
+                    <div id="report-form-container" class="space-y-5 opacity-50 pointer-events-none transition-all">
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            2. Selecciona la condición observada:
+                        </label>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Fast Button: Limpio y funcionando -->
+                            <button type="button" onclick="selectIncidentType('Limpio y funcionando')"
+                                class="incident-btn flex items-center p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 hover:border-emerald-500/50 transition text-left group"
+                                data-type="Limpio y funcionando">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mr-3 shrink-0 text-base group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">Limpio y funcionando</div>
+                                    <div class="text-[11px] text-slate-500">Sanitario 🟢 Operativo</div>
+                                </div>
+                            </button>
+
+                            <!-- boton rapido: Sin agua en lavamanos -->
+                            <button type="button" onclick="selectIncidentType('Sin agua en lavamanos')"
+                                class="incident-btn flex items-center p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 hover:border-amber-500/50 transition text-left group"
+                                data-type="Sin agua en lavamanos">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center mr-3 shrink-0 text-base group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-faucet-drip"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">Sin agua en lavamanos</div>
+                                    <div class="text-[11px] text-slate-500">Advertencia 🟡 Parcial</div>
+                                </div>
+                            </button>
+
+                            <!-- Fast Button: Baños Sucios -->
+                            <button type="button" onclick="selectIncidentType('Baños Sucios')"
+                                class="incident-btn flex items-center p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 hover:border-amber-500/50 transition text-left group"
+                                data-type="Baños Sucios">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center mr-3 shrink-0 text-base group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-broom"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">Baños Sucios</div>
+                                    <div class="text-[11px] text-slate-500">Requiere Limpieza 🟡</div>
+                                </div>
+                            </button>
+
+                            <!-- Fast Button: Sin agua en inodoros -->
+                            <button type="button" onclick="selectIncidentType('Sin agua en inodoros')"
+                                class="incident-btn flex items-center p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 hover:border-rose-500/50 transition text-left group"
+                                data-type="Sin agua en inodoros">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center mr-3 shrink-0 text-base group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-toilet"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">Sin agua en inodoros</div>
+                                    <div class="text-[11px] text-slate-500">Crítico 🔴 Fuera de Servicio</div>
+                                </div>
+                            </button>
+
+                            <!-- Fast Button: Fuga activa -->
+                            <button type="button" onclick="selectIncidentType('Fuga activa')"
+                                class="incident-btn sm:col-span-2 flex items-center p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800/80 hover:border-rose-500/50 transition text-left group"
+                                data-type="Fuga activa">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center mr-3 shrink-0 text-base group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">Fuga activa de agua</div>
+                                    <div class="text-[11px] text-slate-500">Urgencia Hídrica 🔴 Fuera de Servicio</div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <!-- Optional Comment with XSS protection indicator -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-medium text-slate-400">Comentario adicional
+                                    (Opcional):</label>
+                                <span id="char-counter" class="text-[11px] text-slate-500">0 / 255</span>
+                            </div>
+                            <textarea id="report-comment" oninput="updateCharCounter(this)" maxlength="255" rows="2"
+                                placeholder="Ej. El lavamanos del lado derecho no tiene presión de agua..."
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition resize-none"></textarea>
+                            <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-shield-halved text-cyan-500"></i> Protegido contra Spam (Rate
+                                limiting 15 min) y Sanitización HTML (XSS).
+                            </p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="btn-submit-report" onclick="submitStudentReport()"
+                            class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-xl shadow-emerald-950/50 transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Enviar Reporte Anónimo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recommendation Banner (Appears when bathroom turns RED) -->
+                <div id="recommendation-card"
+                    class="hidden bg-gradient-to-r from-rose-950/80 via-slate-900 to-emerald-950/80 border border-rose-500/40 rounded-2xl p-5 shadow-2xl space-y-3 animate-fade-in">
+                    <div class="flex items-center space-x-3 text-rose-400 font-bold text-sm">
+                        <i class="fa-solid fa-circle-exclamation text-lg animate-bounce"></i>
+                        <span>Este baño ha pasado a estado 🔴 FUERA DE SERVICIO</span>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                        El sistema calculó automáticamente la alternativa operativa más cercana en el campus:
+                    </p>
+                    <div
+                        class="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                                🟢
+                            </div>
+                            <div>
+                                <h5 id="rec-building-name" class="font-bold text-sm text-white">Edificio C - Centro de
+                                    Cómputo</h5>
+                                <p id="rec-details" class="text-xs text-slate-400">Planta Baja • Sanitarios Hombres</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div id="rec-distance" class="text-sm font-extrabold text-emerald-400">45 metros</div>
+                            <span class="text-[10px] text-slate-500">Distancia aproximada</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VISTA 3: DASHBOARD DE MANTENIMIENTO (ADMIN) -->
+        <section id="view-admin" class="tab-view flex-1 hidden space-y-6">
+            <!-- Metrics Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Total Modulos -->
+                <div
+                    class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Módulos</p>
+                        <h3 id="metric-total" class="text-2xl font-black text-white mt-1">48</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">En 24 edificios del campus</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-restroom"></i>
+                    </div>
+                </div>
+
+                <!-- Operativos -->
+                <div
+                    class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">🟢 Operativos</p>
+                        <h3 id="metric-operativo" class="text-2xl font-black text-emerald-400 mt-1">45</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Disponibilidad normal</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+
+                <!-- Parciales -->
+                <div
+                    class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-amber-400 uppercase tracking-wider">🟡 Parciales</p>
+                        <h3 id="metric-parcial" class="text-2xl font-black text-amber-400 mt-1">2</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Atención preventiva</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+
+                <!-- Fuera de Servicio -->
+                <div
+                    class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-rose-400 uppercase tracking-wider">🔴 Fuera de Servicio</p>
+                        <h3 id="metric-fuera" class="text-2xl font-black text-rose-400 mt-1">1</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Atención prioritaria</p>
+                    </div>
+                    <div
+                        class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incidents Queue Table -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-amber-400"></i> Cola de Incidencias Sanitarias
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Ordenado por severidad de fallo (Críticos 🔴 primero,
+                            luego Advertencias 🟡)</p>
+                    </div>
+
+                    <button onclick="resolveAllIncidents()"
+                        class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 px-4 py-2 rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right text-emerald-400"></i> Restablecer Todos a Verde
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead
+                            class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">Código QR</th>
+                                <th class="p-3">Edificio / Módulo</th>
+                                <th class="p-3">Género</th>
+                                <th class="p-3">Última Incidencia</th>
+                                <th class="p-3">Estado Semáforo</th>
+                                <th class="p-3 text-right">Acción Mantenimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incidents-table-body" class="divide-y divide-slate-800/60">
+                            <!-- Populated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>
+                <span class="font-semibold text-slate-400">AquaAlert Campus</span> • Proyecto Scrum ITL Campus I
+            </div>
+            <div>
+                Equipo: Rocha Sainez Lezrra Jahir • Velázquez López Antonio • Ornelas Pérez Jonatan Emmanuel
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL POPUP FOR MAP NODE DETAILS -->
+    <div id="modal-backdrop"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div
+            class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4 animate-scale-up">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center space-x-3">
+                <div id="modal-gender-icon"
+                    class="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"></div>
+                <div>
+                    <h3 id="modal-building-name" class="font-bold text-white text-base">---</h3>
+                    <p id="modal-qr-code" class="text-xs font-mono text-slate-400">---</p>
+                </div>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Estado del Semáforo:</span>
+                    <span id="modal-status-badge" class="font-bold px-2.5 py-0.5 rounded-full border">---</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Planta / Ubicación:</span>
+                    <span id="modal-floor" class="text-slate-200">Planta Baja</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-slate-400">Última actualización:</span>
+                    <span id="modal-last-update" class="text-slate-200">Hace instantes</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="modal-btn-report"
+                    class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> Reportar Incidencia
+                </button>
+                <button onclick="closeModal()"
+                    class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE INICIO DE SESIÓN PARA MANTENIMIENTO -->
+    <div id="modal-login"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div
+            class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            <button onclick="cerrarModalLogin()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center space-x-3">
+                <div
+                    class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base">Acceso Mantenimiento</h3>
+                    <p class="text-xs text-slate-400">Panel de Control del Semáforo Sanitario</p>
+                </div>
+            </div>
+
+            <form onsubmit="ejecutarLoginAdmin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Usuario Administrador:</label>
+                    <input type="text" id="login-user" required placeholder="ej. admin"
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Contraseña:</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••"
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="submit"
+                        class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs transition shadow-lg shadow-amber-950/50 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Iniciar Sesión</span>
+                    </button>
+                    <button type="button" onclick="cerrarModalLogin()"
+                        class="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS SYSTEM -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT APP ENGINE -->
+    <script>
+        // Configuración de la URL de tu Backend Python API
+        const API_URL = "http://127.0.0.1:8000";
+        let adminToken = localStorage.getItem("aquaalert_token") || null;
+
+        // =================================================================
+        // DATA MODEL: ITL CAMPUS I BUILDINGS & RESTROOM MODULES
+        // =================================================================
+        const buildingsData = [
+            { id: 1, name: "Edificio A - Dirección y Servicios", code: "EDIF-A", x: 580, y: 550 },
+            { id: 2, name: "Edificio B - Estudios Profesionales", code: "EDIF-B", x: 500, y: 480 },
+            { id: 3, name: "Edificio C - Centro de Cómputo", code: "EDIF-C", x: 450, y: 390 },
+            { id: 4, name: "Edificio D - Sistemas y Computación", code: "EDIF-D", x: 420, y: 290 },
+            { id: 5, name: "Edificio E - Posgrado e Investigación", code: "EDIF-E", x: 300, y: 120 },
+            { id: 6, name: "Edificio F - Aulas", code: "EDIF-F", x: 400, y: 340 },
+            { id: 7, name: "Edificio G - Aulas", code: "EDIF-G", x: 360, y: 380 },
+            { id: 8, name: "Edificio H - Ingeniería Industrial", code: "EDIF-H", x: 370, y: 440 },
+            { id: 9, name: "Edificio I - Centro de Información", code: "EDIF-I", x: 320, y: 580 },
+            { id: 10, name: "Edificio J - Cafetería", code: "EDIF-J", x: 280, y: 480 },
+            { id: 11, name: "Edificio K - Recursos Materiales", code: "EDIF-K", x: 260, y: 340 },
+            { id: 12, name: "Edificio L - Desarrollo Académico", code: "EDIF-L", x: 220, y: 320 },
+            { id: 13, name: "Edificio M - Metal Mecánica", code: "EDIF-M", x: 180, y: 220 },
+            { id: 14, name: "Edificio N - Ciencias Básicas", code: "EDIF-N", x: 240, y: 280 },
+            { id: 15, name: "Edificio Ñ - Servicio Médico", code: "EDIF-Ñ", x: 180, y: 360 },
+            { id: 16, name: "Edificio O - Aulas", code: "EDIF-O", x: 220, y: 420 },
+            { id: 17, name: "Edificio P - Lab. Química", code: "EDIF-P", x: 200, y: 480 },
+            { id: 18, name: "Edificio Q - Ciencias Económicas", code: "EDIF-Q", x: 180, y: 540 },
+            { id: 19, name: "Edificio R - Aulas", code: "EDIF-R", x: 140, y: 480 },
+            { id: 20, name: "Edificio S - Planta Piloto", code: "EDIF-S", x: 110, y: 420 },
+            { id: 21, name: "Edificio T - Electromecánica", code: "EDIF-T", x: 110, y: 340 },
+            { id: 22, name: "Edificio W - Auditorio y Gimnasio", code: "EDIF-W", x: 740, y: 200 },
+            { id: 23, name: "Edificio Y - Aula Magna", code: "EDIF-Y", x: 440, y: 640 },
+            { id: 24, name: "Edificio Z - Vinculación", code: "EDIF-Z", x: 340, y: 640 }
+        ];
+
+        // Lista de Sanitarios (Hombres & Mujeres)
+        let restroomsState = [];
+        let reportsLog = [];
+        let spamTrackerMap = new Map();
+
+        // Initialize Restroom State
+        function initRestroomData() {
+            let idCounter = 1;
+            buildingsData.forEach(b => {
+                restroomsState.push({
+                    id: idCounter++,
+                    qrCode: `${b.code}-PB-H`,
+                    buildingId: b.id,
+                    buildingCode: b.code,
+                    buildingName: b.name,
+                    floor: "Planta Baja",
+                    gender: "Hombres",
+                    status: (b.code === 'EDIF-H') ? 'Fuera de Servicio' : 'Operativo',
+                    x: b.x - 14,
+                    y: b.y - 10,
+                    lastUpdate: new Date()
+                });
+
+                restroomsState.push({
+                    id: idCounter++,
+                    qrCode: `${b.code}-PB-M`,
+                    buildingId: b.id,
+                    buildingCode: b.code,
+                    buildingName: b.name,
+                    floor: "Planta Baja",
+                    gender: "Mujeres",
+                    status: (b.code === 'EDIF-C') ? 'Parcial' : 'Operativo',
+                    x: b.x + 14,
+                    y: b.y - 10,
+                    lastUpdate: new Date()
+                });
+            });
+        }
+
+        // Global State
+        let currentFilterStatus = 'ALL';
+        let selectedIncidentType = null;
+        let activeModuleForReport = null;
+
+        // =================================================================
+        // INITIALIZATION & TAB SWITCHING
+        // =================================================================
+        window.onload = function () {
+            initRestroomData();
+            populateQRDropdown();
+            renderMap();
+            updateAuthUI();
+            updateMetricsAndAdminTable();
+            obtenerEstatusMapa();
+        };
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active-tab', 'bg-slate-800', 'text-white', 'shadow');
+                el.classList.add('text-slate-400');
+            });
+
+            const activeNav = document.getElementById(`nav-tab-${tabName}`);
+            if (activeNav) {
+                activeNav.classList.add('active-tab', 'bg-slate-800', 'text-white', 'shadow');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            if (tabName === 'map') {
+                renderMap();
+            } else if (tabName === 'admin') {
+                updateMetricsAndAdminTable();
+            }
+        }
+
+        // =================================================================
+        // AUTENTICACIÓN Y CONTROL DE ACCESO A MANTENIMIENTO
+        // =================================================================
+        function updateAuthUI() {
+            const container = document.getElementById('header-auth-container');
+            if (!container) return;
+
+            if (adminToken) {
+                container.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <div class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5">
+                            <i class="fa-solid fa-user-check text-amber-400"></i>
+                            <span class="hidden sm:inline">Mantenimiento ITL</span>
+                        </div>
+                        <button onclick="cerrarSesionAdmin()" title="Cerrar Sesión" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold transition">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="abrirModalLogin()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-key"></i>
+                        <span>Acceso Mantenimiento</span>
+                    </button>
+                `;
+            }
+        }
+
+        function abrirModalLogin() {
+            document.getElementById('modal-login').classList.remove('hidden');
+        }
+
+        function cerrarModalLogin() {
+            document.getElementById('modal-login').classList.add('hidden');
+        }
+
+        async function ejecutarLoginAdmin(e) {
+            e.preventDefault();
+            const username = document.getElementById("login-user").value;
+            const password = document.getElementById("login-pass").value;
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    adminToken = data.token;
+                    localStorage.setItem("aquaalert_token", adminToken);
+                    showToast("Acceso Autorizado", `Bienvenido: ${data.nombre}`, "success");
+                    cerrarModalLogin();
+                    updateAuthUI();
+                    updateMetricsAndAdminTable();
+                } else {
+                    showToast("Acceso Denegado", "Credenciales incorrectas.", "error");
+                }
+            } catch (err) {
+                // Modo offline / fallback
+                if (username === "admin" && password === "mantenimiento123") {
+                    adminToken = "token_simulado_mantenimiento_itl";
+                    localStorage.setItem("aquaalert_token", adminToken);
+                    showToast("Sesión Iniciada", "Acceso de mantenimiento activado.", "success");
+                    cerrarModalLogin();
+                    updateAuthUI();
+                    updateMetricsAndAdminTable();
+                } else {
+                    showToast("Error de Conexión", "No se pudo comunicar con el servidor.", "error");
+                }
+            }
+        }
+
+        function cerrarSesionAdmin() {
+            adminToken = null;
+            localStorage.removeItem("aquaalert_token");
+            updateAuthUI();
+            updateMetricsAndAdminTable();
+            showToast("Sesión Finalizada", "Ha salido del modo de mantenimiento.", "info");
+        }
+
+        // =================================================================
+        // MAP VIEW RENDER ENGINE (ITL CAMPUS I)
+        // =================================================================
+        function setFilterStatus(status) {
+            currentFilterStatus = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+                btn.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            const activeBtn = document.getElementById(`filter-btn-${status}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+            }
+            renderMap();
+        }
+
+        function renderMap() {
+            const container = document.getElementById('map-nodes-layer');
+            container.innerHTML = '';
+
+            const selectedGender = document.getElementById('filter-gender').value;
+
+            buildingsData.forEach(b => {
+                const bldgBox = document.createElement('div');
+                bldgBox.className = 'absolute bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-1.5 z-10';
+                bldgBox.style.left = `${b.x}px`;
+                bldgBox.style.top = `${b.y + 24}px`;
+                bldgBox.innerHTML = `
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    <span class="text-[11px] font-extrabold text-slate-200 tracking-tight">${b.code}</span>
+                `;
+                container.appendChild(bldgBox);
+            });
+
+            restroomsState.forEach(r => {
+                if (currentFilterStatus !== 'ALL' && r.status !== currentFilterStatus) return;
+                if (selectedGender !== 'ALL' && r.gender !== selectedGender) return;
+
+                let colorClass = 'bg-emerald-500 border-emerald-300 text-slate-950 shadow-emerald-900/50';
+                if (r.status === 'Parcial') {
+                    colorClass = 'bg-amber-400 border-amber-200 text-slate-950 shadow-amber-900/50';
+                } else if (r.status === 'Fuera de Servicio') {
+                    colorClass = 'bg-rose-500 border-rose-300 text-white pulse-red shadow-rose-900/80';
+                }
+
+                const genderIcon = (r.gender === 'Hombres') ? '🚹' : '🚺';
+
+                const badge = document.createElement('button');
+                badge.className = `absolute z-20 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border-2 font-bold text-xs flex items-center justify-center transition-all duration-300 hover:scale-125 shadow-lg ${colorClass}`;
+                badge.style.left = `${r.x}px`;
+                badge.style.top = `${r.y}px`;
+                badge.title = `${r.buildingName} (${r.gender}) - Status: ${r.status}`;
+                badge.innerHTML = `<span class="text-xs">${genderIcon}</span>`;
+                badge.onclick = () => openModal(r);
+
+                container.appendChild(badge);
+            });
+        }
+
+        // =================================================================
+        // STUDENT QR REPORT ENGINE & SEMAPHORE ALGORITHM
+        // =================================================================
+        function populateQRDropdown() {
+            const select = document.getElementById('select-qr-module');
+            select.innerHTML = '<option value="">-- Seleccionar Módulo del Campus --</option>';
+            restroomsState.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.qrCode;
+                opt.textContent = `${r.qrCode} - ${r.buildingName} (${r.gender})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function onSelectQRModule(qrCode) {
+            if (!qrCode) {
+                document.getElementById('selected-module-card').classList.add('hidden');
+                document.getElementById('report-form-container').classList.add('opacity-50', 'pointer-events-none');
+                activeModuleForReport = null;
+                return;
+            }
+
+            activeModuleForReport = restroomsState.find(r => r.qrCode === qrCode);
+            if (activeModuleForReport) {
+                document.getElementById('card-building-name').textContent = activeModuleForReport.buildingName;
+                document.getElementById('card-qr-code').textContent = `Código QR: ${activeModuleForReport.qrCode} • ${activeModuleForReport.floor}`;
+
+                const iconBox = document.getElementById('card-gender-icon');
+                if (activeModuleForReport.gender === 'Hombres') {
+                    iconBox.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold bg-blue-500/20 text-blue-400";
+                    iconBox.innerHTML = "🚹";
+                } else {
+                    iconBox.className = "w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold bg-pink-500/20 text-pink-400";
+                    iconBox.innerHTML = "🚺";
+                }
+
+                const badge = document.getElementById('card-status-badge');
+                if (activeModuleForReport.status === 'Operativo') {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                    badge.textContent = "🟢 Operativo";
+                } else if (activeModuleForReport.status === 'Parcial') {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border-amber-500/30";
+                    badge.textContent = "🟡 Parcial";
+                } else {
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border-rose-500/30";
+                    badge.textContent = "🔴 Fuera de Servicio";
+                }
+
+                document.getElementById('selected-module-card').classList.remove('hidden');
+                document.getElementById('report-form-container').classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('recommendation-card').classList.add('hidden');
+            }
+        }
+
+        function simulateCameraScan() {
+            const randomModule = restroomsState[Math.floor(Math.random() * restroomsState.length)];
+            document.getElementById('select-qr-module').value = randomModule.qrCode;
+            onSelectQRModule(randomModule.qrCode);
+            showToast("QR Escaneado exitosamente", `Ubicación precargada: ${randomModule.buildingName} (${randomModule.gender})`, "info");
+        }
+
+        function selectIncidentType(type) {
+            selectedIncidentType = type;
+            document.querySelectorAll('.incident-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-cyan-500', 'bg-slate-800');
+                if (btn.getAttribute('data-type') === type) {
+                    btn.classList.add('ring-2', 'ring-cyan-500', 'bg-slate-800');
+                }
+            });
+        }
+
+        function updateCharCounter(textarea) {
+            document.getElementById('char-counter').textContent = `${textarea.value.length} / 255`;
+        }
+
+        function sanitizeInput(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        async function submitStudentReport() {
+            if (!activeModuleForReport) {
+                showToast("Error de Selección", "Selecciona un módulo de baño primero.", "error");
+                return;
+            }
+            if (!selectedIncidentType) {
+                showToast("Falta Selección", "Selecciona el estado u opción observada.", "warning");
+                return;
+            }
+
+            const rawComment = document.getElementById('report-comment').value;
+            const cleanComment = sanitizeInput(rawComment);
+
+            const simulatedIp = "192.168.1.45";
+            const spamKey = `${simulatedIp}_${activeModuleForReport.id}`;
+            const lastEnvio = spamTrackerMap.get(spamKey);
+            const now = new Date();
+
+            if (lastEnvio && (now - lastEnvio < 15 * 60 * 1000)) {
+                showToast("Protección Anti-Spam", "Ha enviado un reporte recientemente. Por favor espere 15 minutos.", "error");
+                return;
+            }
+
+            spamTrackerMap.set(spamKey, now);
+
+            // Intentar enviar a la API de Python
+            try {
+                await enviarReporteAPI(activeModuleForReport.id, selectedIncidentType, cleanComment);
+            } catch (e) {}
+
+            reportsLog.push({
+                id: reportsLog.length + 1,
+                banoId: activeModuleForReport.id,
+                qrCode: activeModuleForReport.qrCode,
+                tipoIncidencia: selectedIncidentType,
+                comentario: cleanComment,
+                timestamp: now,
+                resuelto: false
+            });
+
+            evaluateSemaphoreRules(activeModuleForReport.id);
+
+            showToast("Reporte Registrado", "Gracias por contribuir a la higiene del ITL.", "success");
+
+            if (activeModuleForReport.status === 'Fuera de Servicio') {
+                calculateNearestRecommendation(activeModuleForReport);
+            }
+
+            selectedIncidentType = null;
+            document.querySelectorAll('.incident-btn').forEach(btn => btn.classList.remove('ring-2', 'ring-cyan-500', 'bg-slate-800'));
+            document.getElementById('report-comment').value = '';
+            document.getElementById('char-counter').textContent = '0 / 255';
+
+            onSelectQRModule(activeModuleForReport.qrCode);
+            updateMetricsAndAdminTable();
+        }
+
+        function evaluateSemaphoreRules(banoId) {
+            const bano = restroomsState.find(r => r.id === banoId);
+            if (!bano) return;
+
+            const recentReports = reportsLog.filter(r => r.banoId === banoId && !r.resuelto);
+
+            const fallasCriticas = recentReports.filter(r => ["Sin agua en inodoros", "Fuga activa"].includes(r.tipoIncidencia)).length;
+            const fallasParciales = recentReports.filter(r => ["Sin agua en lavamanos", "Baños Sucios"].includes(r.tipoIncidencia)).length;
+            const reportesPositivos = recentReports.filter(r => r.tipoIncidencia === "Limpio y funcionando").length;
+
+            if (reportesPositivos > 0 && fallasCriticas === 0 && fallasParciales === 0) {
+                bano.status = "Operativo";
+            } else if (fallasCriticas >= 1 || (fallasParciales + fallasCriticas) >= 2) {
+                bano.status = "Fuera de Servicio";
+            } else if (fallasParciales == 1) {
+                bano.status = "Parcial";
+            }
+            bano.lastUpdate = new Date();
+        }
+
+        function calculateNearestRecommendation(currentBano) {
+            const candidates = restroomsState.filter(r => r.gender === currentBano.gender && r.status === 'Operativo' && r.id !== currentBano.id);
+            if (candidates.length === 0) return;
+
+            let nearest = null;
+            let minDistance = Infinity;
+
+            candidates.forEach(cand => {
+                const dx = cand.x - currentBano.x;
+                const dy = cand.y - currentBano.y;
+                const distPixels = Math.sqrt(dx * dx + dy * dy);
+                if (distPixels < minDistance) {
+                    minDistance = distPixels;
+                    nearest = cand;
+                }
+            });
+
+            if (nearest) {
+                const meters = Math.round(minDistance * 0.35);
+                document.getElementById('rec-building-name').textContent = nearest.buildingName;
+                document.getElementById('rec-details').textContent = `${nearest.floor} • Sanitarios ${nearest.gender}`;
+                document.getElementById('rec-distance').textContent = `${meters} metros`;
+                document.getElementById('recommendation-card').classList.remove('hidden');
+            }
+        }
+
+        // =================================================================
+        // DASHBOARD DE MANTENIMIENTO (ADMIN ENGINE CON TOKEN)
+        // =================================================================
+        function updateMetricsAndAdminTable() {
+            const total = restroomsState.length;
+            const operativos = restroomsState.filter(r => r.status === 'Operativo').length;
+            const parciales = restroomsState.filter(r => r.status === 'Parcial').length;
+            const fuera = restroomsState.filter(r => r.status === 'Fuera de Servicio').length;
+
+            document.getElementById('metric-total').textContent = total;
+            document.getElementById('metric-operativo').textContent = operativos;
+            document.getElementById('metric-parcial').textContent = parciales;
+            document.getElementById('metric-fuera').textContent = fuera;
+
+            const pendingTotal = parciales + fuera;
+            const badge = document.getElementById('badge-pending-count');
+            const mobBadge = document.getElementById('mob-badge-pending-count');
+            if (pendingTotal > 0) {
+                badge.textContent = pendingTotal;
+                badge.classList.remove('hidden');
+                mobBadge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                mobBadge.classList.add('hidden');
+            }
+
+            const tbody = document.getElementById('incidents-table-body');
+            tbody.innerHTML = '';
+
+            const nonOperative = restroomsState.filter(r => r.status !== 'Operativo');
+            nonOperative.sort((a, b) => {
+                if (a.status === 'Fuera de Servicio' && b.status !== 'Fuera de Servicio') return -1;
+                if (a.status !== 'Fuera de Servicio' && b.status === 'Fuera de Servicio') return 1;
+                return 0;
+            });
+
+            if (nonOperative.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-500">
+                            <i class="fa-solid fa-circle-check text-2xl text-emerald-500 mb-2 block"></i>
+                            ¡Excelente! Todos los módulos sanitarios del campus se encuentran 🟢 Operativos.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            nonOperative.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+
+                const recentIncidents = reportsLog.filter(log => log.banoId === r.id && !log.resuelto);
+                const lastIncidentText = recentIncidents.length > 0 ? recentIncidents[recentIncidents.length - 1].tipoIncidencia : "Atención Requerida";
+
+                let statusBadge = `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">🟡 Parcial</span>`;
+                if (r.status === 'Fuera de Servicio') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">🔴 Fuera de Servicio</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-slate-200 font-bold">${r.qrCode}</td>
+                    <td class="p-3 font-semibold text-white">${r.buildingName}</td>
+                    <td class="p-3">${r.gender === 'Hombres' ? '🚹 Hombres' : '🚺 Mujeres'}</td>
+                    <td class="p-3 text-slate-300 font-medium">${lastIncidentText}</td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="resolveSingleIncident(${r.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition shadow-md shadow-emerald-950 flex items-center gap-1.5 ml-auto">
+                            <i class="fa-solid fa-check"></i> Restablecer 🟢
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function resolveSingleIncident(banoId) {
+            if (!adminToken) {
+                showToast("Acción Restringida", "Debe iniciar sesión como Personal de Mantenimiento.", "warning");
+                abrirModalLogin();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/incidencias/${banoId}/resolver`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                if (!res.ok) throw new Error("Acceso no autorizado");
+            } catch (err) {
+                console.warn("Resolviendo en estado local:", err);
+            }
+
+            const bano = restroomsState.find(r => r.id === banoId);
+            if (bano) {
+                bano.status = 'Operativo';
+                bano.lastUpdate = new Date();
+                reportsLog.forEach(log => {
+                    if (log.banoId === banoId) log.resuelto = true;
+                });
+                showToast("Incidencia Resuelta", `El sanitario ${bano.qrCode} se restableció a 🟢 Operativo.`, "success");
+                updateMetricsAndAdminTable();
+                renderMap();
+            }
+        }
+
+        async function resolveAllIncidents() {
+            if (!adminToken) {
+                showToast("Acción Restringida", "Debe iniciar sesión como Personal de Mantenimiento.", "warning");
+                abrirModalLogin();
+                return;
+            }
+
+            for (const r of restroomsState.filter(item => item.status !== 'Operativo')) {
+                try {
+                    await fetch(`${API_URL}/api/admin/incidencias/${r.id}/resolver`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                } catch (e) {}
+                r.status = 'Operativo';
+                r.lastUpdate = new Date();
+            }
+
+            reportsLog.forEach(log => log.resuelto = true);
+            showToast("Mantenimiento Completo", "Todos los sanitarios del campus se restablecieron a 🟢 Operativo.", "success");
+            updateMetricsAndAdminTable();
+            renderMap();
+        }
+
+        // =================================================================
+        // MODAL POPUP & TOAST NOTIFICATIONS SYSTEM
+        // =================================================================
+        function openModal(restroom) {
+            document.getElementById('modal-building-name').textContent = restroom.buildingName;
+            document.getElementById('modal-qr-code').textContent = `Código QR: ${restroom.qrCode}`;
+            document.getElementById('modal-floor').textContent = restroom.floor;
+
+            const iconBox = document.getElementById('modal-gender-icon');
+            if (restroom.gender === 'Hombres') {
+                iconBox.className = "w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold bg-blue-500/20 text-blue-400";
+                iconBox.innerHTML = "🚹";
+            } else {
+                iconBox.className = "w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold bg-pink-500/20 text-pink-400";
+                iconBox.innerHTML = "🚺";
+            }
+
+            const badge = document.getElementById('modal-status-badge');
+            if (restroom.status === 'Operativo') {
+                badge.className = "font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+                badge.textContent = "🟢 Operativo";
+            } else if (restroom.status === 'Parcial') {
+                badge.className = "font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/20 text-amber-400 border-amber-500/30";
+                badge.textContent = "🟡 Parcial";
+            } else {
+                badge.className = "font-bold px-2.5 py-0.5 rounded-full border bg-rose-500/20 text-rose-400 border-rose-500/30";
+                badge.textContent = "🔴 Fuera de Servicio";
+            }
+
+            document.getElementById('modal-btn-report').onclick = () => {
+                closeModal();
+                switchTab('report');
+                document.getElementById('select-qr-module').value = restroom.qrCode;
+                onSelectQRModule(restroom.qrCode);
+            };
+
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let borderClass = 'border-cyan-500/40 text-cyan-400';
+            let icon = 'fa-circle-info';
+            if (type === 'success') {
+                borderClass = 'border-emerald-500/40 text-emerald-400';
+                icon = 'fa-circle-check';
+            } else if (type === 'warning') {
+                borderClass = 'border-amber-500/40 text-amber-400';
+                icon = 'fa-triangle-exclamation';
+            } else if (type === 'error') {
+                borderClass = 'border-rose-500/40 text-rose-400';
+                icon = 'fa-circle-xmark';
+            }
+
+            toast.className = `pointer-events-auto bg-slate-900 border ${borderClass} p-4 rounded-xl shadow-2xl flex items-start space-x-3 max-w-sm w-full transform transition-all duration-300 translate-y-4 opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-lg shrink-0 mt-0.5"></i>
+                <div class="flex-1">
+                    <h5 class="font-bold text-xs text-white">${title}</h5>
+                    <p class="text-[11px] text-slate-300 mt-0.5">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // =================================================================
+        // CONEXIÓN REST API PYTHON FASTAPI
+        // =================================================================
+        async function obtenerEstatusMapa() {
+            try {
+                const respuesta = await fetch(`${API_URL}/api/mapa/estatus`);
+                if (!respuesta.ok) return;
+                const datos = await respuesta.json();
+                
+                datos.forEach(apiModule => {
+                    const local = restroomsState.find(r => r.id === apiModule.id || r.qrCode === apiModule.codigo_qr);
+                    if (local) {
+                        local.status = apiModule.estado_semaforo;
+                    }
+                });
+                renderMap();
+                updateMetricsAndAdminTable();
+            } catch (error) {
+                console.log("Conectado en modo simulación interactiva local.");
+            }
+        }
+
+        async function enviarReporteAPI(banoId, tipoIncidencia, comentario) {
+            const respuesta = await fetch(`${API_URL}/api/reportes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bano_id: banoId,
+                    tipo_incidencia: tipoIncidencia,
+                    comentario: comentario
+                })
+            });
+
+            if (respuesta.status === 429) {
+                showToast("Anti-Spam Activo", "Ha enviado un reporte recientemente. Espere 15 minutos.", "error");
+                return;
+            }
+
+            if (respuesta.ok) {
+                obtenerEstatusMapa();
+            }
+        }
+    </script>
+</body>
+</html>
