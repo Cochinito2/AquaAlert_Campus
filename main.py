@@ -8,6 +8,7 @@ import html
 import re
 import os
 import uvicorn
+import pymysql
 
 app = FastAPI(
     title="AquaAlert_Campus API",
@@ -23,6 +24,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# -------------------------------------------------------------------
+# CONEXIÓN A BASE DE DATOS (LAYERBASE / MARIADB)
+# -------------------------------------------------------------------
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv("DB_HOST", "aquaalert-campus-dove-plank.sage.cloud.layerbase.dev"),
+        port=int(os.getenv("DB_PORT", 48283)),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "ev0VE1I5BBqyxmScSWxL09y9"),
+        database=os.getenv("DB_NAME", "aquaalert_campus"),
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+        ssl={"ssl": {}}
+    )
 
 # -------------------------------------------------------------------
 # CLASE 5 UML: ValidadorSeguridad (Control Anti-Spam y Sanitización)
@@ -74,22 +90,9 @@ class ModuloSanitarioDTO(BaseModel):
     posicion_y: int
 
 # -------------------------------------------------------------------
-# BASE DE DATOS SIMULADA / SIMULACIÓN ORM SQL
-# -------------------------------------------------------------------
-# En producción se conecta vía SQLAlchemy con aquaalert_db
-db_banos = {
-    1: {"id": 1, "codigo_qr": "EDIF-D-PB-H", "edificio": "Edificio D - Sistemas", "planta": "Planta Baja", "genero": "Hombres", "estado_actual": "Operativo", "posicion_x": 460, "posicion_y": 420},
-    2: {"id": 2, "codigo_qr": "EDIF-D-PB-M", "edificio": "Edificio D - Sistemas", "planta": "Planta Baja", "genero": "Mujeres", "estado_actual": "Operativo", "posicion_x": 460, "posicion_y": 420},
-    3: {"id": 3, "codigo_qr": "EDIF-C-PB-H", "edificio": "Edificio C - Cómputo", "planta": "Planta Baja", "genero": "Hombres", "estado_actual": "Operativo", "posicion_x": 450, "posicion_y": 520},
-    4: {"id": 4, "codigo_qr": "EDIF-H-PB-H", "edificio": "Edificio H - Industrial", "planta": "Planta Baja", "genero": "Hombres", "estado_actual": "Fuera de Servicio", "posicion_x": 380, "posicion_y": 550},
-}
-
-db_reportes = []
-
-# -------------------------------------------------------------------
 # CLASE 1 Y 2 UML: LÓGICA Y ALGORITMO DEL SEMÁFORO AUTOMÁTICO
 # -------------------------------------------------------------------
-def evaluar_algoritmo_semaforo(bano_id: int):
+def evaluar_algoritmo_semaforo(bano_id: int, cursor) -> str:
     """
     Evalúa la frecuencia y gravedad de reportes en los últimos 15 minutos:
     - 🟢 Verde (Operativo): 0 reportes de falla o reporte 'Limpio y funcionando'.
@@ -99,31 +102,44 @@ def evaluar_algoritmo_semaforo(bano_id: int):
     ahora = datetime.now()
     hace_15_min = ahora - timedelta(minutes=15)
     
-    # Filtrar reportes recientes para este baño
-    reportes_recientes = [
-        r for r in db_reportes 
-        if r["bano_id"] == bano_id and r["fecha_hora"] >= hace_15_min and r["estado_reporte"] == "Pendiente"
-    ]
-    
+    # Filtrar reportes recientes para este baño en la base de datos
+    cursor.execute(
+        """
+        SELECT tipo_incidencia FROM reportes 
+        WHERE bano_id = %s AND fecha_hora >= %s AND estado_reporte = 'Pendiente'
+        """,
+        (bano_id, hace_15_min)
+    )
+    reportes_recientes = cursor.fetchall()
+
+    cursor.execute("SELECT estado_actual FROM banos WHERE id = %s", (bano_id,))
+    bano = cursor.fetchone()
+    if not bano:
+        return "Operativo"
+
+    nuevo_estado = bano["estado_actual"]
+
     if not reportes_recientes:
-        return
+        return nuevo_estado
     
     # Contar tipos de incidencias
     fallas_criticas = sum(1 for r in reportes_recientes if r["tipo_incidencia"] in ["Sin agua en inodoros", "Fuga activa"])
     fallas_parciales = sum(1 for r in reportes_recientes if r["tipo_incidencia"] in ["Sin agua en lavamanos", "Baños Sucios"])
     reportes_positivos = sum(1 for r in reportes_recientes if r["tipo_incidencia"] == "Limpio y funcionando")
-    
-    bano = db_banos.get(bano_id)
-    if not bano:
-        return
 
     # Reglas de negocio del semáforo
     if reportes_positivos > 0 and fallas_criticas == 0 and fallas_parciales == 0:
-        bano["estado_actual"] = "Operativo"  # 🟢 Verde
+        nuevo_estado = "Operativo"  # 🟢 Verde
     elif fallas_criticas >= 1 or (fallas_parciales + fallas_criticas) >= 2:
-        bano["estado_actual"] = "Fuera de Servicio"  # 🔴 Rojo
+        nuevo_estado = "Fuera de Servicio"  # 🔴 Rojo
     elif fallas_parciales == 1:
-        bano["estado_actual"] = "Parcial"  # 🟡 Amarillo
+        nuevo_estado = "Parcial"  # 🟡 Amarillo
+
+    cursor.execute(
+        "UPDATE banos SET estado_actual = %s WHERE id = %s",
+        (nuevo_estado, bano_id)
+    )
+    return nuevo_estado
 
 # -------------------------------------------------------------------
 # ENDPOINTS REST (API PUBLIC & ADMIN)
@@ -138,32 +154,44 @@ def servir_interfaz():
 @app.get("/api/mapa/estatus", response_model=List[ModuloSanitarioDTO])
 def obtener_estatus_global():
     """CLASE 4 (MapaInteractivo): Retorna el estado del semáforo y coordenadas de todos los módulos."""
-    resultado = []
-    for b in db_banos.values():
-        resultado.append(ModuloSanitarioDTO(
-            id=b["id"],
-            codigo_qr=b["codigo_qr"],
-            edificio=b["edificio"],
-            planta=b["planta"],
-            genero=b["genero"],
-            estado_semaforo=b["estado_actual"],
-            posicion_x=b["posicion_x"],
-            posicion_y=b["posicion_y"]
-        ))
-    return resultado
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT b.id, b.codigo_qr, e.nombre AS edificio, b.planta, 
+                       b.genero, b.estado_actual AS estado_semaforo, 
+                       e.posicion_x, e.posicion_y
+                FROM banos b
+                INNER JOIN edificios e ON b.edificio_id = e.id
+                ORDER BY b.id ASC
+            """)
+            return cursor.fetchall()
+    finally:
+        conn.close()
 
 @app.get("/api/modulos/{codigo_qr}")
 def consultar_modulo_por_qr(codigo_qr: str):
     """CLASE 1 (ModuloSanitario): Precarga la información al escanear el código QR."""
-    for b in db_banos.values():
-        if b["codigo_qr"] == codigo_qr:
-            return b
-    raise HTTPException(status_code=404, detail="Módulo sanitario no encontrado")
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT b.*, e.nombre AS edificio, e.posicion_x, e.posicion_y
+                FROM banos b
+                INNER JOIN edificios e ON b.edificio_id = e.id
+                WHERE b.codigo_qr = %s
+            """, (codigo_qr,))
+            bano = cursor.fetchone()
+            if not bano:
+                raise HTTPException(status_code=404, detail="Módulo sanitario no encontrado")
+            return bano
+    finally:
+        conn.close()
 
 @app.post("/api/reportes", status_code=status.HTTP_201_CREATED)
 def crear_reporte(datos: ReporteCrearDTO, request: Request):
     """CLASE 2 (ReporteIncidencia): Registra reporte anónimo previa validación de seguridad."""
-    ip_cliente = request.client.host
+    ip_cliente = request.client.host if request.client else "0.0.0.0"
     
     # 1. Validar Anti-Spam (Rate limiting)
     if not ValidadorSeguridad.validar_rate_limiting(ip_cliente, datos.bano_id):
@@ -174,42 +202,52 @@ def crear_reporte(datos: ReporteCrearDTO, request: Request):
     
     # 2. Sanitizar Comentario (Seguridad XSS/SQLi)
     comentario_seguro = ValidadorSeguridad.sanitizar_texto(datos.comentario or "")
+    ip_hash = str(abs(hash(ip_cliente)))
     
-    # 3. Guardar Reporte
-    nuevo_reporte = {
-        "id": len(db_reportes) + 1,
-        "bano_id": datos.bano_id,
-        "tipo_incidencia": datos.tipo_incidencia,
-        "comentario": comentario_seguro,
-        "fecha_hora": datetime.now(),
-        "estado_reporte": "Pendiente",
-        "ip_hash": hash(ip_cliente)
-    }
-    db_reportes.append(nuevo_reporte)
-    
-    # 4. Ejecutar Algoritmo del Semáforo
-    evaluar_algoritmo_semaforo(datos.bano_id)
-    
-    return {
-        "mensaje": "Reporte registrado correctamente",
-        "nuevo_estado": db_banos[datos.bano_id]["estado_actual"]
-    }
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM banos WHERE id = %s", (datos.bano_id,))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Baño no encontrado")
+
+            # 3. Guardar Reporte en MySQL/MariaDB
+            cursor.execute("""
+                INSERT INTO reportes (bano_id, tipo_incidencia, comentario, estado_reporte, ip_hash)
+                VALUES (%s, %s, %s, 'Pendiente', %s)
+            """, (datos.bano_id, datos.tipo_incidencia, comentario_seguro, ip_hash))
+
+            # 4. Ejecutar Algoritmo del Semáforo
+            nuevo_estado = evaluar_algoritmo_semaforo(datos.bano_id, cursor)
+        conn.commit()
+
+        return {
+            "mensaje": "Reporte registrado correctamente",
+            "nuevo_estado": nuevo_estado
+        }
+    finally:
+        conn.close()
 
 @app.put("/api/admin/incidencias/{bano_id}/resolver")
 def resolver_incidencia_admin(bano_id: int):
     """CLASE 3 (UsuarioAdministrador): Mantenimiento restablece el módulo a Verde (Operativo)."""
-    if bano_id not in db_banos:
-        raise HTTPException(status_code=404, detail="Módulo no encontrado")
-    
-    # Restablecer a Verde
-    db_banos[bano_id]["estado_actual"] = "Operativo"
-    
-    # Marcar reportes como resueltos
-    for r in db_reportes:
-        if r["bano_id"] == bano_id:
-            r["estado_reporte"] = "Resuelto"
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM banos WHERE id = %s", (bano_id,))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Módulo no encontrado")
             
-    return {"mensaje": f"Módulo {bano_id} restablecido a Verde (Operativo)"}
+            # Restablecer a Verde
+            cursor.execute("UPDATE banos SET estado_actual = 'Operativo' WHERE id = %s", (bano_id,))
+            
+            # Marcar reportes como resueltos
+            cursor.execute("UPDATE reportes SET estado_reporte = 'Resuelto' WHERE bano_id = %s", (bano_id,))
+        conn.commit()
+            
+        return {"mensaje": f"Módulo {bano_id} restablecido a Verde (Operativo)"}
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     puerto = int(os.environ.get("PORT", 8000))
