@@ -208,7 +208,7 @@
 
                 <!-- Legend Bottom Right -->
                 <div
-                    class="absolute bottom-4 right-4 z-20 bg-slate-900/90 backdrop-blur border border-slate-800 p-3 rounded-xl shadow-lg text-xs space-y-1.5">
+                    class="absolute bottom-3 right-3 z-20 bg-slate-900/90 backdrop-blur border border-slate-800 p-2 sm:p-3 rounded-xl shadow-lg text-[10px] sm:text-xs space-y-1">
                     <div class="font-semibold text-slate-300 mb-1 border-b border-slate-800 pb-1">Simbología</div>
                     <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> 🟢
                         Operativo (Agua OK)</div>
@@ -220,7 +220,7 @@
 
                 <!-- Interactive SVG Canvas for Map -->
                 <div
-                    class="relative w-full h-full min-h-[550px] overflow-auto custom-scrollbar p-6 flex items-center justify-center">
+                    class="relative w-full h-full min-h-[550px] overflow-auto custom-scrollbar p-4 sm:p-6 block lg:flex lg:items-center lg:justify-center">
                     <div id="map-container"
                         class="relative w-[1100px] h-[700px] bg-slate-950/40 rounded-3xl border border-slate-800/80 shadow-inner overflow-hidden">
 
@@ -283,7 +283,7 @@
                         </label>
                         <div class="flex gap-2">
                             <select id="select-qr-module" onchange="onSelectQRModule(this.value)"
-                                class="flex-1 bg-slate-950 border border-slate-800 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-cyan-500 transition">
+                                class="min-w-0 flex-1 truncate bg-slate-950 border border-slate-800 text-slate-100 text-xs sm:text-sm rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:border-cyan-500 transition">
                                 <option value="">-- Seleccionar Módulo del Campus --</option>
                             </select>
                             <button onclick="simulateCameraScan()"
@@ -556,15 +556,10 @@
     <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div>
-                <span class="font-semibold text-slate-400">AquaAlert Campus</span> • Proyecto ITL Campus I
+                <span class="font-semibold text-slate-400">AquaAlert Campus</span> • Proyecto Scrum ITL Campus I
             </div>
-            <div class="flex flex-wrap items-center justify-center gap-3">
-                <span>Equipo: Rocha Sainez Lezrra Jahir • Velázquez López Antonio • Ornelas Pérez Jonatan Emmanuel</span>
-                <a href="https://github.com/Cochinito2/AquaAlert_Campus" target="_blank" rel="noopener noreferrer"
-                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-                    <i class="fa-brands fa-github text-sm"></i>
-                    <span>GitHub</span>
-                </a>
+            <div>
+                Equipo: Rocha Sainez Lezrra Jahir • Velázquez López Antonio • Ornelas Pérez Jonatan Emmanuel
             </div>
         </div>
     </footer>
@@ -762,6 +757,19 @@
                 el.classList.add('text-slate-400');
             });
 
+            ['map', 'report', 'admin'].forEach(t => {
+                const mobBtn = document.getElementById(`mob-tab-${t}`);
+                if (mobBtn) {
+                    mobBtn.classList.remove('text-emerald-400');
+                    mobBtn.classList.add('text-slate-400');
+                }
+            });
+            const activeMob = document.getElementById(`mob-tab-${tabName}`);
+            if (activeMob) {
+                activeMob.classList.remove('text-slate-400');
+                activeMob.classList.add('text-emerald-400');
+            }
+
             const activeNav = document.getElementById(`nav-tab-${tabName}`);
             if (activeNav) {
                 activeNav.classList.add('active-tab', 'bg-slate-800', 'text-white', 'shadow');
@@ -838,7 +846,6 @@
                     showToast("Acceso Denegado", "Credenciales incorrectas.", "error");
                 }
             } catch (err) {
-                // Modo offline / fallback
                 if (username === "admin" && password === "mantenimiento123") {
                     adminToken = "token_simulado_mantenimiento_itl";
                     localStorage.setItem("aquaalert_token", adminToken);
@@ -884,7 +891,7 @@
 
             buildingsData.forEach(b => {
                 const bldgBox = document.createElement('div');
-                bldgBox.className = 'absolute bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-1.5 z-10';
+                bldgBox.className = 'absolute bg-slate-900/90 border border-slate-700/80 rounded-xl px-2.5 py-1.5 shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-1.5 z-10 whitespace-nowrap';
                 bldgBox.style.left = `${b.x}px`;
                 bldgBox.style.top = `${b.y + 24}px`;
                 bldgBox.innerHTML = `
@@ -1028,7 +1035,6 @@
 
             spamTrackerMap.set(spamKey, now);
 
-            // Intentar enviar a la API de Python
             try {
                 await enviarReporteAPI(activeModuleForReport.id, selectedIncidentType, cleanComment);
             } catch (e) {}
@@ -1159,7 +1165,13 @@
                 tr.className = "hover:bg-slate-800/40 transition";
 
                 const recentIncidents = reportsLog.filter(log => log.banoId === r.id && !log.resuelto);
-                const lastIncidentText = recentIncidents.length > 0 ? recentIncidents[recentIncidents.length - 1].tipoIncidencia : "Atención Requerida";
+                const lastIncidentText = recentIncidents.length > 0 
+                    ? recentIncidents[recentIncidents.length - 1].tipoIncidencia 
+                    : (r.ultimaIncidencia || "Atención Requerida");
+
+                const lastCommentText = recentIncidents.length > 0 
+                    ? recentIncidents[recentIncidents.length - 1].comentario 
+                    : (r.ultimoComentario || "");
 
                 let statusBadge = `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">🟡 Parcial</span>`;
                 if (r.status === 'Fuera de Servicio') {
@@ -1170,7 +1182,10 @@
                     <td class="p-3 font-mono text-slate-200 font-bold">${r.qrCode}</td>
                     <td class="p-3 font-semibold text-white">${r.buildingName}</td>
                     <td class="p-3">${r.gender === 'Hombres' ? '🚹 Hombres' : '🚺 Mujeres'}</td>
-                    <td class="p-3 text-slate-300 font-medium">${lastIncidentText}</td>
+                    <td class="p-3">
+                        <div class="text-slate-200 font-semibold">${lastIncidentText}</div>
+                        ${lastCommentText ? `<div class="text-[11px] text-cyan-400 italic mt-0.5">"${lastCommentText}"</div>` : ''}
+                    </td>
                     <td class="p-3">${statusBadge}</td>
                     <td class="p-3 text-right">
                         <button onclick="resolveSingleIncident(${r.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition shadow-md shadow-emerald-950 flex items-center gap-1.5 ml-auto">
@@ -1202,6 +1217,8 @@
             const bano = restroomsState.find(r => r.id === banoId);
             if (bano) {
                 bano.status = 'Operativo';
+                bano.ultimaIncidencia = null;
+                bano.ultimoComentario = null;
                 bano.lastUpdate = new Date();
                 reportsLog.forEach(log => {
                     if (log.banoId === banoId) log.resuelto = true;
@@ -1227,6 +1244,8 @@
                     });
                 } catch (e) {}
                 r.status = 'Operativo';
+                r.ultimaIncidencia = null;
+                r.ultimoComentario = null;
                 r.lastUpdate = new Date();
             }
 
@@ -1330,6 +1349,8 @@
                     const local = restroomsState.find(r => r.id === apiModule.id || r.qrCode === apiModule.codigo_qr);
                     if (local) {
                         local.status = apiModule.estado_semaforo;
+                        local.ultimaIncidencia = apiModule.ultima_incidencia || null;
+                        local.ultimoComentario = apiModule.ultimo_comentario || null;
                     }
                 });
                 renderMap();
@@ -1352,7 +1373,7 @@
 
             if (respuesta.status === 429) {
                 showToast("Anti-Spam Activo", "Ha enviado un reporte recientemente. Espere 15 minutos.", "error");
-                throw new Error("Rate limit");
+                return;
             }
 
             if (respuesta.ok) {
